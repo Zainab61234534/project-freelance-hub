@@ -1,0 +1,18 @@
+$kind: http-request
+description: "يتطلب مستخدم isBanned=true في قاعدة البيانات. المتوقع: 403 Your account is banned."
+url: "{{baseUrl}}/auth/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "email": "banned@example.com",
+      "password": "{{password}}"
+    }
+scripts:
+  - type: afterResponse
+    code: pm.test('403 Forbidden', () => pm.response.to.have.status(403));
+    language: text/javascript
+order: 9000

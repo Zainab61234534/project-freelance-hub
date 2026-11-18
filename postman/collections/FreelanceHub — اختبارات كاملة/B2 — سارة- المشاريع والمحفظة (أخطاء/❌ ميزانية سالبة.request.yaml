@@ -1,0 +1,25 @@
+$kind: http-request
+url: "{{baseUrl}}/projects"
+method: POST
+body:
+  type: formdata
+  content:
+    - type: text
+      key: title
+      value: T
+    - type: text
+      key: description
+      value: D
+    - type: text
+      key: budget
+      value: "-5"
+    - type: text
+      key: categoryId
+      value: "{{categoryId}}"
+scripts:
+  - type: afterResponse
+    code: |-
+      let j = {}; try { j = pm.response.json(); } catch (e) {}
+      pm.test("كود الحالة 400", function () { pm.expect(pm.response.code).to.be.oneOf([400]); });
+    language: text/javascript
+order: 5000

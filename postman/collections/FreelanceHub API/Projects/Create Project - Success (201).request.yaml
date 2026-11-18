@@ -1,0 +1,32 @@
+$kind: http-request
+description: "يتطلب جلسة CLIENT. المتوقع: 201 مع id. يقوم بحفظ id في المتغير
+  projectId تلقائياً. المرفق اختياري (JPG/PNG/WebP/PDF حتى 5MB)."
+url: "{{baseUrl}}/projects"
+method: POST
+body:
+  type: formdata
+  content:
+    - type: text
+      key: title
+      value: Website Development
+    - type: text
+      key: description
+      value: Build a company website with NestJS and React
+    - type: text
+      key: budget
+      value: "500.50"
+    - type: text
+      key: categoryId
+      value: "{{categoryId}}"
+    - type: file
+      key: attachment
+      src:
+        - ""
+scripts:
+  - type: afterResponse
+    code: |-
+      pm.test('201 Created', () => pm.response.to.have.status(201));
+      const j = pm.response.json();
+      if (j && j.id) { pm.collectionVariables.set('projectId', j.id); console.log('projectId =', j.id); }
+    language: text/javascript
+order: 1532

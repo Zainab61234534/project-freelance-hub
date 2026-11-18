@@ -1,0 +1,21 @@
+$kind: http-request
+name: "🔐 محاولة 2: بريد غير مسجَّل (نفس الرسالة)"
+url: "{{baseUrl}}/auth/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "nobody_{{runId}}@test.com",
+      "password": "WrongPass123"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      let j = {}; try { j = pm.response.json(); } catch (e) {}
+      pm.test("كود الحالة 401", function () { pm.expect(pm.response.code).to.be.oneOf([401]); });
+      pm.test("الرسالة نفسها (لا كشف للبريدات)", function () { pm.expect(j.message).to.eql(pm.collectionVariables.get("_loginErrMsg")); });
+    language: text/javascript
+order: 7000

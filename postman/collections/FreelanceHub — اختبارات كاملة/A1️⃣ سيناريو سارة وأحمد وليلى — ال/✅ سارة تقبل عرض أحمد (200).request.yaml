@@ -1,0 +1,20 @@
+$kind: http-request
+description: الحقل expectedPrice مطلوب فقط إن أضفت تعديل 'expectedPrice' في الكود، وإلا يُتجاهل.
+url: "{{baseUrl}}/offers/projects/{{projectId}}/accept/{{offerAhmedId}}"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "expectedPrice": 200
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      let j = {}; try { j = pm.response.json(); } catch (e) {}
+      pm.test("كود الحالة 201", function () { pm.expect(pm.response.code).to.be.oneOf([201]); });
+      pm.test("المبلغ المحجوز 200", function () { pm.expect(parseFloat(j.reservedAmount)).to.eql(200); });
+    language: text/javascript
+order: 15000

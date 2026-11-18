@@ -1,0 +1,12 @@
+$kind: http-request
+url: "{{baseUrl}}/projects/{{projectId}}"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      let j = {}; try { j = pm.response.json(); } catch (e) {}
+      pm.test("كود الحالة 200", function () { pm.expect(pm.response.code).to.be.oneOf([200]); });
+      pm.test("الحالة OPEN", function () { pm.expect(j.status).to.eql("OPEN"); });
+      pm.test("[بعد الإصلاح] لا تُسرَّب قائمة العروض offers", function () { pm.expect(j.offers).to.be.undefined; });
+    language: text/javascript
+order: 8000

@@ -1,0 +1,12 @@
+$kind: http-request
+url: "{{baseUrl}}/projects?page=0"
+method: GET
+queryParams:
+  page: "0"
+scripts:
+  - type: afterResponse
+    code: |-
+      let j = {}; try { j = pm.response.json(); } catch (e) {}
+      pm.test("كود الحالة 400", function () { pm.expect(pm.response.code).to.be.oneOf([400]); });
+    language: text/javascript
+order: 12000

@@ -1,0 +1,30 @@
+$kind: http-request
+description: "multipart/form-data. حقل attachment اختياري (معطّل هنا): فعّله واختر صورة أو PDF حتى 5MB لاختبار المرفق."
+url: "{{baseUrl}}/projects"
+method: POST
+body:
+  type: formdata
+  content:
+    - type: text
+      key: title
+      value: x
+    - type: text
+      key: description
+      value: وصف المشروع لأغراض الاختبار
+    - type: text
+      key: budget
+      value: "50"
+    - type: text
+      key: categoryId
+      value: "{{categoryId}}"
+    - type: file
+      key: attachment
+      src: []
+      disabled: true
+scripts:
+  - type: afterResponse
+    code: |-
+      let j = {}; try { j = pm.response.json(); } catch (e) {}
+      pm.test("كود الحالة 403", function () { pm.expect(pm.response.code).to.be.oneOf([403]); });
+    language: text/javascript
+order: 2000

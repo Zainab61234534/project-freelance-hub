@@ -1,0 +1,217 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+enum UserRole {
+  ADMIN
+  CLIENT
+  FREELANCER
+}
+
+enum ProjectStatus {
+  OPEN
+  IN_PROGRESS
+  CANCELLED
+  COMPLETED
+}
+
+enum OfferStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum TransactionType {
+  DEPOSIT
+  RESERVE
+  RESERVATION_CAPTURE
+  PAYMENT_RECEIVED
+  PLATFORM_FEE
+  REFUND
+}
+
+enum WalletTransactionReferenceType {
+  PROJECT
+}
+
+enum DeliveryStatus {
+  PENDING
+  APPROVED
+  REVISION_REQUESTED
+}
+model Session {
+  id        String   @id @default(uuid()) @db.Uuid
+
+  tokenHash String   @unique
+
+  userId    String   @db.Uuid
+
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  lastUsedAt DateTime?
+  revokedAt  DateTime?
+
+  userAgent String?
+  ipAddress String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  email     String   @unique
+  password  String
+  role      UserRole
+  isBanned  Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  freelancerProfile FreelancerProfile?
+  wallet            Wallet?
+
+  projects Project[] @relation("ClientProjects")
+  offers   Offer[]   @relation("FreelancerOffers")
+    sessions Session[]
+}
+model FreelancerProfile {
+  id         String  @id @default(uuid()) @db.Uuid
+  userId     String  @unique @db.Uuid
+  profileImage String?
+  bio        String?
+  hourlyRate Decimal? @db.Decimal(12, 2)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+model Category {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  projects Project[]
+}
+model Project {
+  id           String        @id @default(uuid()) @db.Uuid
+  title        String
+  description  String
+  budget       Decimal       @db.Decimal(12, 2)
+  attachmentUrl String?
+  status       ProjectStatus @default(OPEN)
+
+  clientId     String        @db.Uuid
+  categoryId   String        @db.Uuid
+  acceptedOfferId String?     @unique @db.Uuid
+
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  client   User     @relation("ClientProjects", fields: [clientId], references: [id])
+  category Category @relation(fields: [categoryId], references: [id])
+   acceptedOffer Offer?        @relation("AcceptedProjectOffer", fields: [acceptedOfferId], references: [id], onDelete: SetNull)
+  offers     Offer[]
+  deliveries Delivery[]
+
+  @@index([clientId])
+  @@index([categoryId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([budget])
+  @@index([status, categoryId, createdAt])
+}
+model Offer {
+  id           String      @id @default(uuid()) @db.Uuid
+  price        Decimal     @db.Decimal(12, 2)
+  durationDays Int
+  message      String
+  status       OfferStatus @default(PENDING)
+
+  freelancerId String     @db.Uuid
+  projectId    String     @db.Uuid
+
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+ 
+acceptedProject Project? @relation("AcceptedProjectOffer")
+  freelancer User    @relation("FreelancerOffers", fields: [freelancerId], references: [id])
+  project    Project @relation(fields: [projectId], references: [id] , onDelete: Cascade)
+
+  @@unique([freelancerId, projectId])
+  @@index([projectId])
+  @@index([freelancerId])
+}
+model Wallet {
+  id              String   @id @default(uuid()) @db.Uuid
+  userId          String?  @unique @db.Uuid
+
+  availableBalance Decimal @default(0) @db.Decimal(14, 2)
+  reservedBalance  Decimal @default(0) @db.Decimal(14, 2)
+
+  isPlatform      Boolean  @default(false)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user User? @relation(fields: [userId], references: [id])
+
+  transactions WalletTransaction[]
+
+  @@index([isPlatform])
+}
+model WalletTransaction {
+  id             String          @id @default(uuid()) @db.Uuid
+
+  walletId       String          @db.Uuid
+  amount         Decimal         @db.Decimal(14, 2)
+  type           TransactionType
+
+  referenceId    String?         @db.Uuid
+  referenceType  WalletTransactionReferenceType?
+  idempotencyKey String?
+
+  description    String?
+
+  createdAt      DateTime        @default(now())
+
+  wallet Wallet @relation(fields: [walletId], references: [id])
+
+  @@unique([walletId, idempotencyKey])
+  @@index([walletId, createdAt])
+  @@index([referenceId])
+}
+
+model Delivery {
+  id            String         @id @default(uuid()) @db.Uuid
+  projectId     String         @db.Uuid
+
+  fileUrl       String
+  fileName      String?
+
+  status        DeliveryStatus @default(PENDING)
+  reviewMessage String?
+
+  submittedAt   DateTime       @default(now())
+  approvedAt    DateTime?
+
+  project       Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([status])
+}
+

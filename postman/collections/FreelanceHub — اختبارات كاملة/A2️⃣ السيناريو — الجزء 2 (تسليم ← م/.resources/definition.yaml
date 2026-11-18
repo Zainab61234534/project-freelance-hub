@@ -1,0 +1,4 @@
+$kind: collection
+name: A2️⃣ السيناريو — الجزء 2 (تسليم ← مراجعة ← دفع 180/20)
+description: '4 عمليات دخول. بعد انتهائه: أحمد 180، المنصة 20 (تحقق من محفظة المنصة بـ SQL: SELECT * FROM "Wallet" WHERE "isPlatform" = true).'
+order: 3000

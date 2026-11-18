@@ -1,0 +1,16 @@
+# Use this workspace to collaborate
+workspace:
+  id: a575a077-0437-4599-8ae3-9b0b4c154801
+
+localResources:
+  collections:
+    - ../FreelanceHub.postman_collection.json
+  environments:
+    - ../FreelanceHub.postman_environment.json
+
+# Each entry here maps a local resource to one or more corresponding objects in Postman Cloud
+
+cloudResources:
+  collections:
+    ../postman/collections/FreelanceHub API: 1db37112-1062-45e7-848d-b1e106d01a46
+    ../postman/collections/FreelanceHub — اختبارات كاملة: f0bc9d6c-7988-47db-a81e-a55fbadf529a

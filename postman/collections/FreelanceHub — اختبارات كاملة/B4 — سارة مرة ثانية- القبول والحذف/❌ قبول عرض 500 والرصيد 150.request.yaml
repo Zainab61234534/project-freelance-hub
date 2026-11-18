@@ -1,0 +1,19 @@
+$kind: http-request
+url: "{{baseUrl}}/offers/projects/{{project3Id}}/accept/{{offerAhmedP3Id}}"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "expectedPrice": 500
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      let j = {}; try { j = pm.response.json(); } catch (e) {}
+      pm.test("كود الحالة 400", function () { pm.expect(pm.response.code).to.be.oneOf([400]); });
+      pm.test("رصيد غير كافٍ", function () { pm.expect(JSON.stringify(j)).to.include("Insufficient"); });
+    language: text/javascript
+order: 2000

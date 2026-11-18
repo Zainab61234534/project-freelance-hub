@@ -1,0 +1,26 @@
+$kind: collection
+description: |-
+  مجموعة بوستمان لمشروع FreelanceHub (NestJS + Prisma).
+
+  الوحدات المطبقة:
+  - Auth: /auth
+  - Freelancer Profile: /freelancer-profile
+  - Projects: /projects
+
+  مهم:
+  1) شغّل السيرفر أولاً: npm run start:dev (أو npm start) على http://localhost:3000
+  2) فعّل Environment باسم FreelanceHub Local.
+  3) المصادقة عبر كوكي fh_session (HttpOnly) يتم ضبطه عند POST /auth/login. فعّل إدارة الكوكيز في Postman.
+  4) مسارات /freelancer-profile و /projects تتطلب جلسة صالحة.
+  5) إنشاء مشروع يتطلب categoryId موجوداً في جدول Category (لا يوجد Endpoint للفئات حالياً). القيمة الافتراضية في Environment تم إنشاؤها في قاعدة البيانات المحلية.
+  6) رفع الملفات: profileImage (JPG/PNG/WebP حتى 2MB)، ومرفق المشروع attachment (JPG/PNG/WebP/PDF حتى 5MB).
+
+  ملاحظة: موديلات Category و Offer و Wallet و WalletTransaction و Delivery معرفة في Prisma لكن لا توجد لها Controllers/Endpoints حتى الآن.
+variables:
+  baseUrl: http://localhost:3000
+  clientEmail: client@example.com
+  freelancerEmail: freelancer@example.com
+  otherClientEmail: client2@example.com
+  password: Password123!
+  categoryId: a2fa1609-ed21-4581-8117-6b84d605877f
+  projectId: ""

@@ -1,0 +1,19 @@
+$kind: http-request
+name: 📋 ترتيب بالميزانية تنازلياً + تصنيف + limit=1
+url: "{{baseUrl}}/projects?categoryId={{categoryId}}&sortBy=budget_desc&limit=1&page=1"
+method: GET
+queryParams:
+  categoryId: "{{categoryId}}"
+  sortBy: budget_desc
+  limit: "1"
+  page: "1"
+scripts:
+  - type: afterResponse
+    code: |-
+      let j = {}; try { j = pm.response.json(); } catch (e) {}
+      pm.test("كود الحالة 200", function () { pm.expect(pm.response.code).to.be.oneOf([200]); });
+      pm.test("عنصر واحد", function () { pm.expect(j.data.length).to.eql(1); });
+      pm.test("الأعلى ميزانية 500", function () { pm.expect(parseFloat(j.data[0].budget)).to.eql(500); });
+      pm.test("عدد الصفحات 2", function () { pm.expect(j.pagination.totalPages).to.eql(2); });
+    language: text/javascript
+order: 9000

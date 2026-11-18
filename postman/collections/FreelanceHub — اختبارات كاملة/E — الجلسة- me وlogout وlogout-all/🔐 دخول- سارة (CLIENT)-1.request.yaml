@@ -1,0 +1,33 @@
+$kind: http-request
+name: "🔐 دخول: سارة (CLIENT)"
+description: يحفظ الكوكي تلقائياً في Postman. حد الدخول 5 في الدقيقة، والسكربت ينتظر تلقائياً عند الحاجة.
+url: "{{baseUrl}}/auth/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "sara_{{runId}}@test.com",
+      "password": "{{userPassword}}"
+    }
+scripts:
+  - type: beforeRequest
+    code: |-
+      const now = Date.now();
+      let times = JSON.parse(pm.collectionVariables.get("_loginTimes") || "[]").filter(function (x) { return now - x < 60000; });
+      let wait = 0;
+      if (times.length >= 5) { wait = 60000 - (now - times[0]) + 700; }
+      times.push(now + wait);
+      pm.collectionVariables.set("_loginTimes", JSON.stringify(times));
+      if (wait > 0) { console.log("انتظار " + Math.round(wait / 1000) + " ثانية بسبب حد الدخول 5/دقيقة"); setTimeout(function () {}, wait); }
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      let j = {}; try { j = pm.response.json(); } catch (e) {}
+      pm.test("كود الحالة 200", function () { pm.expect(pm.response.code).to.be.oneOf([200]); });
+      const sc = pm.response.headers.get("Set-Cookie") || ""; pm.test("تم إرجاع كوكي الجلسة fh_session", function () { pm.expect(sc).to.include("fh_session"); });
+      if (j.user && j.user.id) { pm.collectionVariables.set("saraId", j.user.id); }
+    language: text/javascript
+order: 5000

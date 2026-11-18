@@ -1,0 +1,28 @@
+$kind: http-request
+description: يبدأ runId جديداً ليُنشئ مستخدمين جدداً في كل تشغيل.
+url: "{{baseUrl}}/auth/register"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "Sara",
+      "email": "sara_{{runId}}@test.com",
+      "password": "{{userPassword}}",
+      "role": "CLIENT"
+    }
+scripts:
+  - type: beforeRequest
+    code: pm.collectionVariables.set("runId", Date.now().toString());
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      let j = {}; try { j = pm.response.json(); } catch (e) {}
+      pm.test("كود الحالة 201", function () { pm.expect(pm.response.code).to.be.oneOf([201]); });
+      pm.test("لا تُرجع كلمة المرور", function () { pm.expect(j.password).to.be.undefined; });
+      pm.test("الدور صحيح", function () { pm.expect(j.role).to.eql("CLIENT"); });
+      if (j.id) { pm.collectionVariables.set("saraId", j.id); }
+    language: text/javascript
+order: 1000

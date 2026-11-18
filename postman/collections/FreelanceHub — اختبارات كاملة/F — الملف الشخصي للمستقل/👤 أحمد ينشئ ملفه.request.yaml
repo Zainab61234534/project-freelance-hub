@@ -1,0 +1,25 @@
+$kind: http-request
+description: multipart. لاختبار الصورة فعّل profileImage واختر JPG/PNG/WebP حتى 2MB.
+url: "{{baseUrl}}/freelancer-profile"
+method: POST
+body:
+  type: formdata
+  content:
+    - type: text
+      key: bio
+      value: مصمم شعارات
+    - type: text
+      key: hourlyRate
+      value: "25.5"
+    - type: file
+      key: profileImage
+      src: []
+      disabled: true
+scripts:
+  - type: afterResponse
+    code: |-
+      let j = {}; try { j = pm.response.json(); } catch (e) {}
+      pm.test("كود الحالة 201", function () { pm.expect(pm.response.code).to.be.oneOf([201]); });
+      pm.test("السعر 25.5", function () { pm.expect(parseFloat(j.hourlyRate)).to.eql(25.5); });
+    language: text/javascript
+order: 2000

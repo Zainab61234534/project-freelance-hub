@@ -1,0 +1,18 @@
+$kind: http-request
+description: "بعد إنشاء بروفايل لنفس المستخدم. المتوقع: 409 Profile already exists."
+url: "{{baseUrl}}/freelancer-profile"
+method: POST
+body:
+  type: formdata
+  content:
+    - type: text
+      key: bio
+      value: Duplicate
+    - type: text
+      key: hourlyRate
+      value: "30"
+scripts:
+  - type: afterResponse
+    code: pm.test('409 Conflict', () => pm.response.to.have.status(409));
+    language: text/javascript
+order: 2000

@@ -1,0 +1,12 @@
+$kind: http-request
+name: ❌ رفع تسليم على مشروع غير قيد التنفيذ
+description: "بدون ملف: يرجع 400 (الملف مطلوب أو المشروع غير قيد التنفيذ)."
+url: "{{baseUrl}}/deliveries/projects/{{project2Id}}"
+method: POST
+scripts:
+  - type: afterResponse
+    code: |-
+      let j = {}; try { j = pm.response.json(); } catch (e) {}
+      pm.test("كود الحالة 400", function () { pm.expect(pm.response.code).to.be.oneOf([400]); });
+    language: text/javascript
+order: 19000

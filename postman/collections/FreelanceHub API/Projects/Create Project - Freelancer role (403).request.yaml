@@ -1,0 +1,24 @@
+$kind: http-request
+description: "سجّل دخول كـ FREELANCER. المتوقع: 403 Only clients can create projects."
+url: "{{baseUrl}}/projects"
+method: POST
+body:
+  type: formdata
+  content:
+    - type: text
+      key: title
+      value: Freelancer Project
+    - type: text
+      key: description
+      value: Should be forbidden
+    - type: text
+      key: budget
+      value: "100"
+    - type: text
+      key: categoryId
+      value: "{{categoryId}}"
+scripts:
+  - type: afterResponse
+    code: pm.test('403 Forbidden', () => pm.response.to.have.status(403));
+    language: text/javascript
+order: 2000

@@ -1,0 +1,12 @@
+$kind: http-request
+name: "📥 ليلى: عرضها صار REJECTED"
+url: "{{baseUrl}}/offers/my"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      let j = {}; try { j = pm.response.json(); } catch (e) {}
+      pm.test("كود الحالة 200", function () { pm.expect(pm.response.code).to.be.oneOf([200]); });
+      pm.test("العرض مرفوض", function () { const o = j.filter(function (x) { return x.id === pm.collectionVariables.get("offerLailaId"); })[0]; pm.expect(o.status).to.eql("REJECTED"); });
+    language: text/javascript
+order: 15000

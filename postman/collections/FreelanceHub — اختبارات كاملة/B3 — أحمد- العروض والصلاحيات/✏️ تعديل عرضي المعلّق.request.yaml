@@ -1,0 +1,19 @@
+$kind: http-request
+url: "{{baseUrl}}/offers/{{offerAhmedP2Id}}"
+method: PATCH
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "price": 90
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      let j = {}; try { j = pm.response.json(); } catch (e) {}
+      pm.test("كود الحالة 200", function () { pm.expect(pm.response.code).to.be.oneOf([200]); });
+      pm.test("السعر 90", function () { pm.expect(parseFloat(j.price)).to.eql(90); });
+    language: text/javascript
+order: 11000

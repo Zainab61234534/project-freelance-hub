@@ -1,0 +1,22 @@
+$kind: http-request
+description: "hourlyRate مطلوب (>0، منزلتان عشريتان). bio اختياري (حتى 1000). الصورة اختيارية (JPG/PNG/WebP حتى 2MB). المتوقع: 201."
+url: "{{baseUrl}}/freelancer-profile"
+method: POST
+body:
+  type: formdata
+  content:
+    - type: text
+      key: bio
+      value: Experienced NestJS developer
+    - type: text
+      key: hourlyRate
+      value: "25.50"
+    - type: file
+      key: profileImage
+      src:
+        - ""
+scripts:
+  - type: afterResponse
+    code: pm.test('201 Created', () => pm.response.to.have.status(201));
+    language: text/javascript
+order: 1000

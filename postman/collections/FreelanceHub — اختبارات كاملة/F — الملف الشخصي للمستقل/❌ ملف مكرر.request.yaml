@@ -1,0 +1,16 @@
+$kind: http-request
+url: "{{baseUrl}}/freelancer-profile"
+method: POST
+body:
+  type: formdata
+  content:
+    - type: text
+      key: hourlyRate
+      value: "30"
+scripts:
+  - type: afterResponse
+    code: |-
+      let j = {}; try { j = pm.response.json(); } catch (e) {}
+      pm.test("كود الحالة 409", function () { pm.expect(pm.response.code).to.be.oneOf([409]); });
+    language: text/javascript
+order: 3000

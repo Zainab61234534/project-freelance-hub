@@ -1,0 +1,21 @@
+$kind: http-request
+url: "{{baseUrl}}/auth/register"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "X",
+      "email": "bad",
+      "password": "{{userPassword}}",
+      "role": "CLIENT"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      let j = {}; try { j = pm.response.json(); } catch (e) {}
+      pm.test("كود الحالة 400", function () { pm.expect(pm.response.code).to.be.oneOf([400]); });
+    language: text/javascript
+order: 1000

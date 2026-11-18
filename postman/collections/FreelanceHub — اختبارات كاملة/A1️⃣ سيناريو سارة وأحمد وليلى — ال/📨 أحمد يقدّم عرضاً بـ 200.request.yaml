@@ -1,0 +1,22 @@
+$kind: http-request
+url: "{{baseUrl}}/offers/projects/{{projectId}}"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "price": 200,
+      "durationDays": 5,
+      "message": "عرض تجريبي من Postman"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      let j = {}; try { j = pm.response.json(); } catch (e) {}
+      pm.test("كود الحالة 201", function () { pm.expect(pm.response.code).to.be.oneOf([201]); });
+      pm.test("حالة العرض PENDING", function () { pm.expect(j.status).to.eql("PENDING"); });
+      if (j.id) { pm.collectionVariables.set("offerAhmedId", j.id); }
+    language: text/javascript
+order: 10000

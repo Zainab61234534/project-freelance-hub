@@ -1,0 +1,31 @@
+$kind: http-request
+name: "🔐 محاولة 1: كلمة مرور خاطئة"
+description: يصفّر نافذة الحد (ينتظر حتى 61 ثانية إن لزم) حتى تبدأ المحاولات من الصفر.
+url: "{{baseUrl}}/auth/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "sara_{{runId}}@test.com",
+      "password": "WrongPass123"
+    }
+scripts:
+  - type: beforeRequest
+    code: |-
+      const now = Date.now();
+      const times = JSON.parse(pm.collectionVariables.get("_loginTimes") || "[]");
+      const last = times.length ? Math.max.apply(null, times) : 0;
+      const wait = Math.max(0, 61000 - (now - last));
+      pm.collectionVariables.set("_loginTimes", "[]");
+      if (wait > 0) { console.log("انتظار " + Math.round(wait / 1000) + " ثانية لتصفير نافذة الحد"); setTimeout(function () {}, wait); }
+    language: text/javascript
+  - type: afterResponse
+    code: |-
+      let j = {}; try { j = pm.response.json(); } catch (e) {}
+      pm.test("كود الحالة 401", function () { pm.expect(pm.response.code).to.be.oneOf([401]); });
+      pm.collectionVariables.set("_loginErrMsg", j.message || "");
+    language: text/javascript
+order: 6000

@@ -1,0 +1,11 @@
+$kind: http-request
+url: "{{baseUrl}}/categories"
+method: GET
+scripts:
+  - type: afterResponse
+    code: |-
+      let j = {}; try { j = pm.response.json(); } catch (e) {}
+      pm.test("كود الحالة 200", function () { pm.expect(pm.response.code).to.be.oneOf([200]); });
+      pm.test("يحتوي التصنيفين", function () { const ids = j.map(function (c) { return c.id; }); pm.expect(ids).to.include.members([pm.collectionVariables.get("categoryId"), pm.collectionVariables.get("category2Id")]); });
+    language: text/javascript
+order: 5000

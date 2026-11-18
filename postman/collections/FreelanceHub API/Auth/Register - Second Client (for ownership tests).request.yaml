@@ -1,0 +1,20 @@
+$kind: http-request
+description: "عميل ثانٍ لاختبار منع تعديل/حذف مشروع لا يملكه. المتوقع: 201."
+url: "{{baseUrl}}/auth/register"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: text
+  content: |-
+    {
+      "name": "Other Client",
+      "email": "{{otherClientEmail}}",
+      "password": "{{password}}",
+      "role": "CLIENT"
+    }
+scripts:
+  - type: afterResponse
+    code: pm.test('201 Created', () => pm.response.to.have.status(201));
+    language: text/javascript
+order: 3000

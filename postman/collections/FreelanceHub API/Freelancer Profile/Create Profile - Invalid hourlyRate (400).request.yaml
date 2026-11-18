@@ -1,0 +1,18 @@
+$kind: http-request
+description: "hourlyRate يجب أن يكون >= 0.01. المتوقع: 400."
+url: "{{baseUrl}}/freelancer-profile"
+method: POST
+body:
+  type: formdata
+  content:
+    - type: text
+      key: bio
+      value: ""
+    - type: text
+      key: hourlyRate
+      value: "0"
+scripts:
+  - type: afterResponse
+    code: pm.test('400 Bad Request', () => pm.response.to.have.status(400));
+    language: text/javascript
+order: 5000

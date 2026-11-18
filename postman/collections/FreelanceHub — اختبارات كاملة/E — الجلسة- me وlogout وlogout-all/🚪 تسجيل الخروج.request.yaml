@@ -1,0 +1,10 @@
+$kind: http-request
+url: "{{baseUrl}}/auth/logout"
+method: POST
+scripts:
+  - type: afterResponse
+    code: |-
+      let j = {}; try { j = pm.response.json(); } catch (e) {}
+      pm.test("كود الحالة 200", function () { pm.expect(pm.response.code).to.be.oneOf([200]); });
+    language: text/javascript
+order: 3000

@@ -1,0 +1,19 @@
+$kind: http-request
+description: "أرفق ملفاً غير صورة أو أكبر من 2MB. المتوقع: 400 Only JPG, PNG and WebP images are allowed."
+url: "{{baseUrl}}/freelancer-profile"
+method: POST
+body:
+  type: formdata
+  content:
+    - type: text
+      key: hourlyRate
+      value: "15"
+    - type: file
+      key: profileImage
+      src:
+        - ""
+scripts:
+  - type: afterResponse
+    code: pm.test('400 Bad Request', () => pm.response.to.have.status(400));
+    language: text/javascript
+order: 6000

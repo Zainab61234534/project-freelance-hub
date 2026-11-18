@@ -1,0 +1,11 @@
+$kind: http-request
+description: "المتوقع: 200 مرتب تصاعدياً حسب الميزانية."
+url: "{{baseUrl}}/projects?sortBy=budget_asc"
+method: GET
+queryParams:
+  sortBy: budget_asc
+scripts:
+  - type: afterResponse
+    code: pm.test('200 OK', () => pm.response.to.have.status(200));
+    language: text/javascript
+order: 11000

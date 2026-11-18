@@ -1,0 +1,22 @@
+$kind: http-request
+name: "⛔ محاولة 6: يجب أن تُحظر (429)"
+description: بعد هذا الطلب أي دخول يحتاج ~60 ثانية (السكربت ينتظر تلقائياً).
+url: "{{baseUrl}}/auth/login"
+method: POST
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "email": "sara_{{runId}}@test.com",
+      "password": "WrongPass123"
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      let j = {}; try { j = pm.response.json(); } catch (e) {}
+      pm.test("كود الحالة 429", function () { pm.expect(pm.response.code).to.be.oneOf([429]); });
+      const n = Date.now(); pm.collectionVariables.set("_loginTimes", JSON.stringify([n, n, n, n, n]));
+    language: text/javascript
+order: 11000

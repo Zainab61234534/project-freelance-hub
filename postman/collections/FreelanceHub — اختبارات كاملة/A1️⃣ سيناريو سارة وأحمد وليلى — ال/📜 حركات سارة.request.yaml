@@ -1,0 +1,14 @@
+$kind: http-request
+url: "{{baseUrl}}/wallet/transactions?page=1&limit=10"
+method: GET
+queryParams:
+  page: "1"
+  limit: "10"
+scripts:
+  - type: afterResponse
+    code: |-
+      let j = {}; try { j = pm.response.json(); } catch (e) {}
+      pm.test("كود الحالة 200", function () { pm.expect(pm.response.code).to.be.oneOf([200]); });
+      pm.test("فيها DEPOSIT وRESERVE", function () { const ty = (j.transactions || []).map(function (x) { return x.type; }); pm.expect(ty).to.include.members(["DEPOSIT", "RESERVE"]); });
+    language: text/javascript
+order: 18000

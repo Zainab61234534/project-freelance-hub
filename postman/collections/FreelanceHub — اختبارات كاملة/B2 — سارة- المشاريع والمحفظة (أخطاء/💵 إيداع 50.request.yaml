@@ -1,0 +1,20 @@
+$kind: http-request
+url: "{{baseUrl}}/wallet/deposit"
+method: POST
+headers:
+  Content-Type: application/json
+  Idempotency-Key: dep-{{runId}}-b1
+body:
+  type: json
+  content: |-
+    {
+      "amount": 50
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      let j = {}; try { j = pm.response.json(); } catch (e) {}
+      pm.test("كود الحالة 201", function () { pm.expect(pm.response.code).to.be.oneOf([201]); });
+      pm.test("المتاح 150", function () { pm.expect(parseFloat(j.availableBalance)).to.eql(150); });
+    language: text/javascript
+order: 26000
