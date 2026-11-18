@@ -1,112 +1,289 @@
 # FreelanceHub
 
-## التشغيل
-1. انسخ `.env.example` إلى `.env` ثم عدِّل القيم.
-2. ثبّت الاعتماديات:
-   ```bash
-   npm install
-   ```
-3. أنشئ قاعدة البيانات وولِّد Prisma client:
-   ```bash
-   npx prisma migrate dev
-   npx prisma generate
-   ```
-4. شغّل التطبيق:
-   ```bash
-   npm run start:dev
-   ```
+منصة خلفية (Backend API) لإدارة سوق عمل حر: العميل ينشر مشروعاً، المستقل يقدّم عرضاً، والمنصة تدير المحفظة والتسليم والمراجعة بعمولة 10%.
 
-## Postman
-- استورد `FreelanceHub.postman_collection.json` و`FreelanceHub.postman_environment.json`.
-- رتّب التشغيل: Auth ← Freelancer Profile ← Categories ← Projects ← Wallet ← Offers ← Deliveries ← Admin.
-- مجلد Admin يعمل آخراً لأنه يحظر حساب المستقل مؤقتاً.
-- عدِّل `categoryId` في البيئة ليطابق تصنيفاً موجوداً في قاعدة بياناتك، أو أنشئ تصنيفاً من مجلد Categories ثم ضع الـ id.
-- يجب أن تطابق قيمة `adminPassword` قيمة `ADMIN_PASSWORD` في `.env`.
-- تسجيل الدخول محدود بـ 5 محاولات في الدقيقة لكل IP، لذا شغّل المجلدات على دفعات.
+> هذا المستودع يحتوي على الـ API فقط (NestJS + PostgreSQL + Prisma). لا توجد واجهة أمامية ضمن المشروع.
+
+## فكرة المشروع
+
+**FreelanceHub** هو نظام لإدارة دورة العمل بين العميل والمستقل داخل مكان واحد:
+
+- العميل ينشر مشروعاً بميزانية وتصنيف ومرفق اختياري.
+- المستقل يقدّم عرضاً بالسعر والمدة والرسالة.
+- عند قبول العرض، يُحجز المبلغ من محفظة العميل.
+- المستقل يرفع ملف التسليم.
+- العميل يعتمد التسليم أو يطلب تعديلاً.
+- عند الاعتماد، تُحوّل 90% للمستقل و10% لمحفظة المنصة.
+
+الهدف هو توفير دورة عمل واضحة وآمنة مالياً، مع صلاحيات منفصلة لكل دور، ومحفظة داخلية تمنع الصرف المزدوج وتدعم إعادة المحاولة الآمنة.
+
+## المستخدمون والأدوار
+
+| الدور | الوصف | أهم الصلاحيات |
+|---|---|---|
+| `CLIENT` | صاحب المشروع | إنشاء المشاريع وتعديلها وحذفها، عرض العروض، الإيداع في المحفظة، قبول عرض، مراجعة التسليم واعتماده |
+| `FREELANCER` | منفّذ المشروع | إنشاء الملف الشخصي وتعديله، تقديم عروض على المشاريع، تعديل عرضه قبل القبول، رفع التسليمات |
+| `ADMIN` | مدير المنصة | إدارة التصنيفات، حظر المستخدمين وفك الحظر، الإشراف على دورة المشروع |
+
+يتم إنشاء حساب المدير الأول من ملف `prisma/seed.ts` باستخدام قيمة `ADMIN_PASSWORD` الموجودة في `.env`.
+
+## رحلة العمل داخل النظام
+
+1. المدير ينشئ التصنيفات (أو تأتي من الـ seed).
+2. العميل يسجّل حساباً وينشئ مشروعاً.
+3. المستقل يسجّل حساباً، ينشئ ملفه الشخصي، ثم يقدّم عرضاً.
+4. العميل يشحن محفظته ثم يقبل العرض.
+5. عند القبول يُنقل المبلغ من الرصيد المتاح إلى الرصيد المحجوز في محفظة العميل.
+6. المستقل يرفع ملف التسليم.
+7. العميل يعتمد التسليم أو يطلب تعديلاً مع رسالة توضيحية.
+8. عند الاعتماد: 90% للمستقل، و10% عمولة للمنصة.
+
+## الميزات الرئيسية
+
+### المصادقة والجلسات
+- تسجيل ودخول وخروج.
+- جلسات مخزّنة في قاعدة البيانات، وليس JWT في المتصفح.
+- كوكي `fh_session` من نوع HttpOnly.
+- تسجيل الخروج من كل الأجهزة عبر `POST /auth/logout-all`.
+- إلغاء الجلسات فوراً عند حظر المستخدم.
+- كلمات المرور مشفّرة باستخدام `bcryptjs`.
+- تحديد محاولات الدخول: 5 محاولات في الدقيقة لكل IP.
+
+### الملف الشخصي للمستقل
+- صورة شخصية، نبذة، وسعر ساعة.
+- رفع الصورة مع التحقق من نوع الملف ومحتواه.
+- منع تكرار الملف الشخصي لنفس المستخدم.
+
+### التصنيفات
+- عرض التصنيفات النشطة.
+- إنشاء وتعديل التصنيفات بواسطة المدير.
+- منع تكرار اسم التصنيف.
+- إمكانية تعطيل التصنيف عبر `isActive`.
+
+### المشاريع
+- إنشاء مشروع مع عنوان ووصف وميزانية وتصنيف ومرفق اختياري.
+- بحث وفلترة حسب التصنيف، وترتيب حسب الميزانية أو التاريخ.
+- Pagination مع تحقق من قيم `page` و`limit`.
+- تعديل وحذف المشروع من قبل صاحبه فقط.
+
+### العروض
+- المستقل يقدّم عرضاً واحداً لكل مشروع.
+- عرض السعر والمدة والرسالة.
+- تعديل العرض قبل قبوله فقط.
+- قبول العرض يتم داخل Transaction مع منع التزاحم وتحديث حالة المشروع وباقي العروض.
+
+### المحفظة
+- رصيد متاح (`availableBalance`) ورصيد محجوز (`reservedBalance`).
+- إيداع مع `Idempotency-Key` لمنع تكرار العملية.
+- سجل معاملات لأنواع الإيداع والحجز والدفع والعمولة والاسترداد.
+- المحفظة داخلية وتجريبية؛ لا توجد بوابة دفع خارجية ضمن المشروع.
+
+### التسليمات
+- رفع ملف التسليم مع التحقق من الامتداد والمحتوى الفعلي.
+- حد أقصى 20MB لملف التسليم.
+- عرض تسليمات المشروع لصاحبه.
+- تحميل الملف عبر Endpoint محمي.
+- اعتماد التسليم أو طلب تعديل.
+- عند الاعتماد يتم توزيع المبلغ تلقائياً بين المستقل والمنصة.
+
+### الإدارة
+- حظر المستخدم وفك الحظر.
+- منع الدخول للجلسات المحظورة.
+- إدارة التصنيفات.
+
+## التقنيات المستخدمة
+
+| التقنية | الاستخدام في المشروع |
+|---|---|
+| **NestJS 12** | بناء الـ API بنظام Modules وControllers وServices وGuards وPipes |
+| **TypeScript 6** | كتابة الكود مع Type Safety |
+| **PostgreSQL** | قاعدة البيانات العلائقية |
+| **Prisma 7** | الـ ORM، الموديلات، الـ Migrations، والاستعلامات النوعية |
+| **@prisma/adapter-pg** | ربط Prisma بـ PostgreSQL عبر `pg` |
+| **class-validator** | التحقق من بيانات الـ DTO |
+| **class-transformer** | تحويل البيانات وتحويل الأنواع |
+| **bcryptjs** | تشفير كلمات المرور |
+| **cookie-parser** | قراءة كوكي الجلسة |
+| **@nestjs/throttler** | تحديد معدل الطلبات ومحاولات الدخول |
+| **Multer** | استقبال الملفات المرفوعة |
+| **file-type** | التحقق من المحتوى الفعلي للملف وليس الامتداد فقط |
+| **Vitest + Supertest** | اختبارات الوحدة واختبارات الـ E2E |
+| **Oxlint** | فحص الكود (Linting) |
+| **Prettier** | تنسيق الكود |
+| **Postman** | مجموعة طلبات جاهزة لاختبار كل الـ Endpoints |
+| **NestJS Observe** | إرسال الـ Traces والأخطاء والـ Logs (اختياري) |
+
+## بنية المشروع
+
+```text
+src/
+├── auth/                 # التسجيل، الدخول، الجلسات، logout-all
+├── freelancer-profile/   # الملف الشخصي للمستقل
+├── categories/           # التصنيفات
+├── project/              # المشاريع
+├── offers/               # العروض وقبولها
+├── wallet/               # المحفظة والإيداع والمعاملات
+├── deliveries/           # رفع التسليم ومراجعته
+├── admin/                # الحظر وفك الحظر
+├── common/               # الـ Guards والـ Decorators والأدوات المشتركة
+├── prisma/               # PrismaService
+└── main.ts               # إعداد التطبيق وCORS والـ ValidationPipe
+
+prisma/
+├── schema.prisma         # 9 موديلات + Enums
+├── migrations/           # تاريخ تغييرات قاعدة البيانات
+└── seed.ts               # حساب المدير + محفظة المنصة
+
+postman/
+├── fixtures/             # ملفات اختبار الرفع
+├── collections/          # نسخة YAML من المجموعة
+└── globals/
+```
+
+## التشغيل
+
+### المتطلبات
+- Node.js
+- PostgreSQL
+- npm
+
+### الخطوات
+
+1. انسخ ملف البيئة:
+
+```bash
+cp .env.example .env
+```
+
+2. عدّل `DATABASE_URL` و`ADMIN_PASSWORD` داخل `.env`.
+
+3. ثبّت الاعتماديات:
+
+```bash
+npm install
+```
+
+4. طبّق الـ Migrations وولّد Prisma Client:
+
+```bash
+npx prisma migrate dev
+npx prisma generate
+```
+
+5. أنشئ حساب المدير ومحفظة المنصة:
+
+```bash
+npx prisma db seed
+```
+
+6. شغّل التطبيق:
+
+```bash
+npm run start:dev
+```
+
+يعمل الـ API افتراضياً على: `http://localhost:3000`
+
+### تشغيل نسخة الإنتاج
+
+```bash
+npm run build
+npm run start:prod
+```
 
 ## متغيرات البيئة
-- DATABASE_URL
-- ADMIN_PASSWORD
-- PORT
-- NODE_ENV
-- FRONTEND_ORIGIN
-- TRUST_PROXY
 
-## الأدوار
-- ADMIN
-- CLIENT
-- FREELANCER
+| المتغير | الوصف |
+|---|---|
+| `DATABASE_URL` | رابط اتصال PostgreSQL |
+| `ADMIN_PASSWORD` | كلمة مرور حساب المدير عند تشغيل الـ seed |
+| `PORT` | منفذ التطبيق، الافتراضي `3000` |
+| `NODE_ENV` | بيئة التشغيل |
+| `FRONTEND_ORIGIN` | أصل الواجهة المسموح به في CORS (يمكن فصل أكثر من أصل بفاصلة) |
+| `TRUST_PROXY` | تفعيل الثقة بالـ Proxy عند النشر خلف Reverse Proxy |
 
-## نقاط الدخول الأساسية
+## Postman
+
+- استورد `FreelanceHub.postman_collection.json` و`FreelanceHub.postman_environment.json`.
+- رتّب التشغيل: `Auth` ← `Freelancer Profile` ← `Categories` ← `Projects` ← `Wallet` ← `Offers` ← `Deliveries` ← `Admin`.
+- مجلد `Admin` يعمل آخراً لأنه يحظر حساب المستقل مؤقتاً.
+- عدّل `categoryId` في البيئة ليطابق تصنيفاً موجوداً في قاعدة بياناتك، أو أنشئ تصنيفاً من مجلد `Categories` ثم ضع الـ id.
+- يجب أن تطابق قيمة `adminPassword` قيمة `ADMIN_PASSWORD` في `.env`.
+- تسجيل الدخول محدود بـ 5 محاولات في الدقيقة لكل IP، لذا شغّل المجلدات على دفعات.
+- ملفات الرفع موجودة في `postman/fixtures/`.
+
+## أهم نقاط الدخول
+
 ### Auth
-- POST /auth/register
-- POST /auth/login
-- POST /auth/logout
-- POST /auth/logout-all
-- GET /auth/me
+- `POST /auth/register`
+- `POST /auth/login`
+- `POST /auth/logout`
+- `POST /auth/logout-all`
+- `GET /auth/me`
+
+### Freelancer Profile
+- `POST /freelancer-profile`
+- `GET /freelancer-profile/me`
+- `PATCH /freelancer-profile/me`
 
 ### Categories
-- GET /categories
-- GET /categories/:id
-- POST /categories
-- PATCH /categories/:id
-- DELETE /categories/:id
+- `GET /categories`
+- `GET /categories/:id`
+- `POST /categories`
+- `PATCH /categories/:id`
 
 ### Projects
-- POST /projects
-- GET /projects
-- GET /projects/:id
-- PATCH /projects/:id
-- DELETE /projects/:id
+- `POST /projects`
+- `GET /projects`
+- `GET /projects/:id`
+- `PATCH /projects/:id`
+- `DELETE /projects/:id`
 
 ### Offers
-- POST /offers/projects/:projectId
-- GET /offers/my
-- GET /offers/projects/:projectId
-- PATCH /offers/:offerId
-- POST /offers/projects/:projectId/accept/:offerId
+- `POST /offers/projects/:projectId`
+- `GET /offers/my`
+- `GET /offers/projects/:projectId`
+- `PATCH /offers/:offerId`
+- `POST /offers/projects/:projectId/accept/:offerId`
 
 ### Wallet
-- GET /wallet/me
-- GET /wallet/transactions
-- POST /wallet/deposit
+- `GET /wallet/me`
+- `GET /wallet/transactions`
+- `POST /wallet/deposit`
 
 ### Deliveries
-- POST /deliveries/projects/:projectId
-- PATCH /deliveries/:deliveryId/review
-
-### Freelancer profile
-- POST /freelancer-profile
-- GET /freelancer-profile/me
-- PATCH /freelancer-profile/me
+- `POST /deliveries/projects/:projectId`
+- `GET /deliveries/projects/:projectId`
+- `GET /deliveries/:deliveryId/download`
+- `PATCH /deliveries/:deliveryId/review`
 
 ### Admin
-- PATCH /admin/users/:userId/ban
-- PATCH /admin/users/:userId/unban
+- `PATCH /admin/users/:userId/ban`
+- `PATCH /admin/users/:userId/unban`
 
-## أدوار المطلوب لكل endpoint
-- العميل: إنشاء المشاريع، قبول العروض، الإيداع.
-- المستقل: إنشاء الملف الشخصي، عروض المشاريع، رفع التسليمات.
-- المدير: إدارة المستخدمين والتصنيفات.
+## الاختبارات والجودة
 
-## نموذج استجابة المشروع
-```json
-{
-  "id": "uuid",
-  "title": "Project title",
-  "description": "Project description",
-  "budget": "1500.00",
-  "status": "OPEN",
-  "attachmentUrl": "/uploads/projects/uuid.png"
-}
+```bash
+npm test          # اختبارات Vitest
+npm run test:e2e  # اختبارات E2E
+npm run test:api  # Smoke Test للـ API (يتطلب تشغيل السيرفر)
+npm run lint      # Oxlint
+npm run format    # Prettier
 ```
 
-## نموذج ملف المستقل
-```json
-{
-  "id": "uuid",
-  "profileImage": "/uploads/freelancer-profiles/uuid.jpg",
-  "bio": "Senior developer",
-  "hourlyRate": "60.00"
-}
-```
+## قرارات التصميم
+
+- العمولة: 10% للمنصة و90% للمستقل، مع تقريب آمن لتفادي فقدان أي سنت.
+- الحجز المالي: المبلغ يُحجز عند قبول العرض ولا يُدفع إلا بعد اعتماد التسليم.
+- الإيداع: يتطلب `Idempotency-Key` لمنع التكرار.
+- لا يوجد حذف فعلي للتصنيف حالياً؛ التعطيل يتم عبر `isActive`.
+- ملفات التسليم محمية ولا تُعرض بشكل عام.
+
+تفاصيل إضافية موجودة في [`docs/DECISIONS.md`](docs/DECISIONS.md).
+
+## نطاق المشروع
+
+- المشروع Backend API، ولا يتضمن واجهة أمامية.
+- المحفظة والإيداع داخليان وتجريبيان، ولا يوجد اتصال ببوابة دفع حقيقية.
+- الملفات المرفوعة تُخزّن محلياً داخل مجلد `uploads/` (غير مرفوع إلى Git).
+- حساب المدير يُنشأ من الـ seed، ولا توجد واجهة تسجيل عامة للمديرين.
