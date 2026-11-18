@@ -110,7 +110,6 @@
 | **Vitest + Supertest** | اختبارات الوحدة واختبارات الـ E2E |
 | **Oxlint** | فحص الكود (Linting) |
 | **Prettier** | تنسيق الكود |
-| **Postman** | مجموعة طلبات جاهزة لاختبار كل الـ Endpoints |
 | **NestJS Observe** | إرسال الـ Traces والأخطاء والـ Logs (اختياري) |
 
 ## بنية المشروع
@@ -133,11 +132,6 @@ prisma/
 ├── schema.prisma         # 9 موديلات + Enums
 ├── migrations/           # تاريخ تغييرات قاعدة البيانات
 └── seed.ts               # حساب المدير + محفظة المنصة
-
-postman/
-├── fixtures/             # ملفات اختبار الرفع
-├── collections/          # نسخة YAML من المجموعة
-└── globals/
 ```
 
 ## التشغيل
@@ -201,16 +195,6 @@ npm run start:prod
 | `NODE_ENV` | بيئة التشغيل |
 | `FRONTEND_ORIGIN` | أصل الواجهة المسموح به في CORS (يمكن فصل أكثر من أصل بفاصلة) |
 | `TRUST_PROXY` | تفعيل الثقة بالـ Proxy عند النشر خلف Reverse Proxy |
-
-## Postman
-
-- استورد `FreelanceHub.postman_collection.json` و`FreelanceHub.postman_environment.json`.
-- رتّب التشغيل: `Auth` ← `Freelancer Profile` ← `Categories` ← `Projects` ← `Wallet` ← `Offers` ← `Deliveries` ← `Admin`.
-- مجلد `Admin` يعمل آخراً لأنه يحظر حساب المستقل مؤقتاً.
-- عدّل `categoryId` في البيئة ليطابق تصنيفاً موجوداً في قاعدة بياناتك، أو أنشئ تصنيفاً من مجلد `Categories` ثم ضع الـ id.
-- يجب أن تطابق قيمة `adminPassword` قيمة `ADMIN_PASSWORD` في `.env`.
-- تسجيل الدخول محدود بـ 5 محاولات في الدقيقة لكل IP، لذا شغّل المجلدات على دفعات.
-- ملفات الرفع موجودة في `postman/fixtures/`.
 
 ## أهم نقاط الدخول
 

@@ -1,9 +1,0 @@
-$kind: http-request
-description: "سجّل دخول كصاحب المشروع. المتوقع: 200 Project deleted successfully."
-url: "{{baseUrl}}/projects/{{projectId}}"
-method: DELETE
-scripts:
-  - type: afterResponse
-    code: pm.test('200 OK', () => pm.response.to.have.status(200));
-    language: text/javascript
-order: 22000

@@ -1,3 +1,0 @@
-$kind: collection
-description: "معرفة في prisma/schema.prisma بدون Controllers: Category, Offer, Wallet, WalletTransaction, Delivery. لا يمكن اختبارها عبر HTTP حالياً؛ استخدم Prisma Studio أو SQL."
-order: 4000

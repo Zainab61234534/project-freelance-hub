@@ -1,3 +1,0 @@
-$kind: collection
-description: كل المسارات تتطلب جلسة. إنشاء مشروع متاح فقط لدور CLIENT. سجّل دخول كعميل أولاً. متغير categoryId موجود في Environment.
-order: 3000

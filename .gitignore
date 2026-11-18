@@ -45,6 +45,12 @@ lerna-debug.log*
 .env.production.local
 .env.local
 
+# local Postman files (not published)
+/FreelanceHub.postman_collection.json
+/FreelanceHub.postman_environment.json
+/postman/
+/.postman/
+
 # temp directory
 .temp
 .tmp
